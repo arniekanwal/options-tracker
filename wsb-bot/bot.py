@@ -1,5 +1,5 @@
 # custom imports
-import sqliteConnection from data.py
+from db_handler import Database
 
 class RedditBot:
     def __init__(self):
