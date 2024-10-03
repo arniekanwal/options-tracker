@@ -1,5 +1,7 @@
 import sqlite3
 
+from datetime import datetime
+
 class Database:
     """
     Database class to handle SQLite operations. Contains methods to update/query/insert stock data 
@@ -24,11 +26,49 @@ class Database:
     def backfillDB(self):
         pass
 
-    def queryPopular(self):
-        pass
+    def queryPopular(self, count: int = 6, days: int = 14) -> list:
+        """
+        Query the most popular (by mentions) stock tickers.
 
-    def insertData(self):
-        pass
+        Args:
+            count (int): Limit number of stocks returned (default is 6)
+            days (int): Aggregate stock mentions dating back however many days (default is 14, i.e. 2 weeks)
+        """
+        days = min(days, 60) # Cannot query data older than 60 days
+        cursor = self.conn.cursor()
+
+        query = f"""
+            SELECT stock_ticker, SUM(mentions) AS total_mentions
+            FROM stock_mentions
+            WHERE date >= date('now', '-{days} days')  
+            GROUP BY stock_ticker
+            ORDER BY total_mentions DESC
+            LIMIT {count};
+        """
+
+        cursor.execute(query)
+        return cursor.fetchall()
+
+    def insertData(self, data, date: datetime):
+        """
+        Insert data scraped via reddit bot into the database.
+
+        Args:
+            data (dict): reddit data { stock_ticker (str) : daily_mentions (int) }
+            date: Datetime object to track the day this data was collected
+        """
+        
+        cursor = self.conn.cursor()
+        query = """
+            INSERT INTO stock_mentions (date, stock_ticker, mentions)
+            VALUES (?, ?, ?)
+        """
+        # Iterate over the data dictionary and insert each stock ticker and its mentions
+        for ticker, mentions in data.items():
+            cursor.execute(query, (date.strftime('%Y-%m-%d'), ticker, mentions))
+        
+        # Commit the transaction 
+        self.conn.commit()
 
     def deleteOldData(self):
         pass
@@ -41,15 +81,13 @@ class Database:
         print(f"Connection to {self.db_name} was successful...")
         cursor = self.conn.cursor()
 
-        # Create a table only if it does not exist
+        # Create stock_mentions table if it does not exist
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS stock_mentions (
-                id INTEGER PRIMARY KEY,
+                date DATE,
                 stock_ticker TEXT,
                 mentions INTEGER,
-                bullish_count INTEGER,
-                bearish_count INTEGER,
-                last_seen DATE
+                PRIMARY KEY (date, stock_ticker)
             );
         """)
         self.conn.commit()
