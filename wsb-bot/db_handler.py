@@ -6,8 +6,8 @@ class Database:
     collected via the Reddit Bot.
 
     Attributes:
-        db_name (str): The name of the SQLite database file.
-        conn (sqlite3.Connection): The connection object to the SQLite database.
+        db_name (str): sqlite database filename
+        conn (sqlite3.Connection): sqlite connection object
     """
 
     def __init__(self):
@@ -15,8 +15,8 @@ class Database:
         Initialize Database class
 
         Args:
-            db_name (str): sqlite db name
-            conn (Connection): sqlite Connection class
+            db_name (str): sqlite database filename
+            conn (sqlite3.Connection): sqlite connection object
         """
         self.db_name = "stocks.db"
         self.conn = None
@@ -57,5 +57,8 @@ class Database:
         
         
     def stopConnection(self):
+        """
+        Close SQLite connection.
+        """
         if self.conn:
             self.conn.close()
