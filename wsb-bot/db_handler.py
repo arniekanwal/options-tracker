@@ -43,7 +43,9 @@ class Database:
         """
 
         cursor.execute(query)
-        return cursor.fetchall()
+        rows = cursor.fetchall()
+        cursor.close()
+        return rows
 
     def insertData(self, data: dict, date: datetime):
         """
@@ -65,6 +67,7 @@ class Database:
         
         # Commit the transaction 
         self.conn.commit()
+        cursor.close()
 
     def deleteOldData(self):
         """
@@ -78,6 +81,7 @@ class Database:
         # Execute the query and commit transaction
         cursor.execute(query)
         self.conn.commit()
+        cursor.close()
 
     def createConnection(self):
         """
