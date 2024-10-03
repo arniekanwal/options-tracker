@@ -1,6 +1,5 @@
 import sqlite3
-
-from datetime import datetime
+from datetime import datetime, timedelta
 
 class Database:
     """
@@ -22,9 +21,6 @@ class Database:
         """
         self.db_name = "stocks.db"
         self.conn = None
-
-    def backfillDB(self):
-        pass
 
     def queryPopular(self, count: int = 6, days: int = 14) -> list:
         """
@@ -49,7 +45,7 @@ class Database:
         cursor.execute(query)
         return cursor.fetchall()
 
-    def insertData(self, data, date: datetime):
+    def insertData(self, data: dict, date: datetime):
         """
         Insert data scraped via reddit bot into the database.
 
@@ -71,7 +67,17 @@ class Database:
         self.conn.commit()
 
     def deleteOldData(self):
-        pass
+        """
+        Delete data strictly older than 60 days.
+        """
+        # Calculate the cutoff date (60 days ago from today) and create query
+        cursor = self.conn.cursor()
+        cutoff_date = (datetime.now() - timedelta(days=60)).strftime('%Y-%m-%d')
+        query = f"DELETE FROM stock_mentions WHERE date < {cutoff_date}"
+
+        # Execute the query and commit transaction
+        cursor.execute(query)
+        self.conn.commit()
 
     def createConnection(self):
         """

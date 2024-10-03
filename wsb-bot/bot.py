@@ -5,10 +5,10 @@ class RedditBot:
     def __init__(self):
         pass
 
-    def run(self) -> None:
+    def run(self):
         pass
 
-    def __backfillData(self) -> None:
+    def __backfillData(self):
         pass
 
 if __name__ == "__main__":
