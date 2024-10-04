@@ -1,3 +1,5 @@
+import spacy
+
 # custom imports
 from db_handler import Database
 
@@ -9,6 +11,9 @@ class RedditBot:
         pass
 
     def __backfillData(self):
+        pass
+
+    def __stockDisambiguation(self):
         pass
 
 if __name__ == "__main__":
