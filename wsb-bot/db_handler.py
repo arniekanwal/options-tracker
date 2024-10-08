@@ -22,6 +22,30 @@ class Database:
         self.db_name = "stocks.db"
         self.conn = None
 
+    def __enter__(self):
+        self.conn = sqlite3.connect(self.db_name)
+        print(f"Connection to {self.db_name} was successful...")
+        self._create_table()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.conn:
+            self.conn.close()
+            print(f"Connection to {self.db_name} closed.")
+
+    def _create_table(self):
+        cursor = self.conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS stock_mentions (
+                date DATE,
+                stock_ticker TEXT,
+                mentions INTEGER,
+                PRIMARY KEY (date, stock_ticker)
+            );
+        """)
+        self.conn.commit()
+        cursor.close()
+
     def queryPopular(self, count: int = 6, days: int = 14) -> list:
         """
         Query the most popular (by mentions) stock tickers.
@@ -83,30 +107,14 @@ class Database:
         self.conn.commit()
         cursor.close()
 
-    def createConnection(self):
+    def _createConnection(self):
         """
-        Connect to SQLite database. Create tables if they don't exist
+        Manually connect to SQLite database. Create tables if they don't exist
         """
-        self.conn = sqlite3.connect(self.db_name)
-        print(f"Connection to {self.db_name} was successful...")
-        cursor = self.conn.cursor()
+        self.__enter__()
 
-        # Create stock_mentions table if it does not exist
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS stock_mentions (
-                date DATE,
-                stock_ticker TEXT,
-                mentions INTEGER,
-                PRIMARY KEY (date, stock_ticker)
-            );
-        """)
-        self.conn.commit()
-        cursor.close()
-        
-        
-    def stopConnection(self):
+    def _stopConnection(self):
         """
-        Close SQLite connection.
+        Manually close SQLite connection.
         """
-        if self.conn:
-            self.conn.close()
+        self.__exit__(None, None, None)
