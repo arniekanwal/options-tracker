@@ -46,15 +46,18 @@ class Database:
         self.conn.commit()
         cursor.close()
 
-    def queryPopular(self, count: int = 6, days: int = 14) -> list:
+    def query_popular(self, count: int = 6, days: int = 14) -> list:
         """
-        Query the most popular (by mentions) stock tickers.
+        Query for the most popular stocks/ETFs by mentions.
 
-        Args:
+        Parameters:
             count (int): Limit number of stocks returned (default is 6)
             days (int): Aggregate stock mentions dating back however many days (default is 14, i.e. 2 weeks)
+
+        Returns:
+            list: List of tuples containing stock ticker and total mentions
         """
-        days = min(days, 60) # Cannot query data older than 60 days
+        # TODO: set limit for max days in search range
         cursor = self.conn.cursor()
 
         query = f"""
@@ -71,7 +74,7 @@ class Database:
         cursor.close()
         return rows
 
-    def insertData(self, data: dict, date: datetime):
+    def insert_data(self, data: dict, date: datetime):
         """
         Insert data scraped via reddit bot into the database.
 
@@ -93,7 +96,7 @@ class Database:
         self.conn.commit()
         cursor.close()
 
-    def deleteOldData(self):
+    def delete_old_data(self):
         """
         Delete data strictly older than 60 days.
         """
@@ -107,14 +110,31 @@ class Database:
         self.conn.commit()
         cursor.close()
 
-    def _createConnection(self):
+    def _create_connection(self):
         """
         Manually connect to SQLite database. Create tables if they don't exist
         """
         self.__enter__()
 
-    def _stopConnection(self):
+    def _stop_connection(self):
         """
         Manually close SQLite connection.
         """
         self.__exit__(None, None, None)
+
+    def get_oldest_date(self):
+        """
+        Get the oldest date in the stock_mentions table.
+
+        Returns:
+            str: The oldest date in 'YYYY-MM-DD' format, or None if the table is empty.
+        """
+        cursor = self.conn.cursor()
+        query = "SELECT MIN(date) FROM stock_mentions"
+        cursor.execute(query)
+        result = cursor.fetchone()
+        cursor.close()
+
+        # Return oldest date if it exists, otherwise return None
+        return datetime.strptime(result[0], '%Y-%m-%d').date() if result else None
+

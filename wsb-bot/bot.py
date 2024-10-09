@@ -13,27 +13,31 @@ from db_handler import Database
 
 class RedditBot:
     def __init__(self):
-        pass
-
-    def run(self):
-        pass
-
-    def searchSubreddit(self, date: datetime, subreddit: str, searchQuery: str):
-        pass  
-
-    def getWsbTopPosts(self, date: datetime):
         # Load environment variables
         load_dotenv()
 
         # Initialize Reddit API client
-        reddit = praw.Reddit(
+        self.rclient = praw.Reddit(
             client_id=os.getenv('REDDIT_ID'),
             client_secret=os.getenv('REDDIT_SECRET'),
             user_agent=os.getenv('APP_NAME')
         )
 
-        # Connect to the subreddit
-        subreddit = reddit.subreddit('wallstreetbets')
+        # Initialize NLP model
+        self.nlp = spacy.load("en_core_web_sm")
+
+        # Initialize database connection
+        self.db = Database()
+
+    def run(self):
+        pass
+
+    def search_subreddit(self, date: datetime, subreddit: str, search_query: str):
+        pass  
+
+    def get_wsb_top_posts(self, date: datetime):
+        # Connect to r/wallstreetbets
+        subreddit = self.rclient.subreddit('wallstreetbets')
 
         # Initialize dictionaries to store ticker mentions and sentiment
         ticker_mentions = defaultdict(int)
@@ -58,12 +62,12 @@ class RedditBot:
         return ticker_mentions, avg_sentiment
 
     def __analyze_text(self, text, ticker_mentions, ticker_sentiment):
-        # Use spaCy for named entity recognition
+        # Use the class variable self.nlp instead of reinitializing
         doc = self.nlp(text)
         
         for ent in doc.ents:
             if ent.label_ == 'ORG':  # Assuming tickers are recognized as organizations
-                ticker = self.__stockDisambiguation(ent.text)
+                ticker = self.__stock_disambiguation(ent.text)
                 if ticker:
                     ticker_mentions[ticker] += 1
                     
@@ -71,14 +75,11 @@ class RedditBot:
                     sentiment = TextBlob(text).sentiment.polarity
                     ticker_sentiment[ticker].append(sentiment)  
 
-    def __backfillData(self):
+    def __backfill_database(self, days: int):
         pass
 
-    def __stockDisambiguation(self):
+    def __stock_disambiguation(self, ticker: str) -> str:
         pass
-
-    def __getDate(self):
-        return datetime.now().date()
 
 if __name__ == "__main__":
     wsb_bot = RedditBot()
